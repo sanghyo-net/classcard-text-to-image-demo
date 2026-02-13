@@ -108,7 +108,7 @@ export default function Home() {
       <p style={{ marginTop: 16, lineHeight: 1.7 }}>
         체험해보실 수 있도록 하기 위해 임시로 제작되었습니다. 클래스카드 서비스에 통합해 실제 사용을 진행하시려면{" "}
         <a href="mailto:sanghyokorea@gmail.com">sanghyokorea@gmail.com</a>
-        로 연락하시거나 네이버, 구글에 '상효넷' 검색하여 제 사이트를 방문해주세요.
+        로 연락하시거나 네이버, 구글에 '상효넷' 검색(www.sanghyo.net)하여 제 사이트를 방문해주세요.
       </p>
     </div>
   );
