@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-    // 여러 이미지 순서를 유지해서 전달
+    // 사진 순서 유지
     const content = images.map((img) => ({
       type: "input_image",
       image_url: img
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
     const response = await client.responses.create({
       model: "gpt-5-mini",
       reasoning: { effort: "high" },
+      // ✅ 여기 때문에 "당신의 커스텀 프롬프트"가 적용됩니다
       prompt: { id: PROMPT_ID, version: PROMPT_VERSION },
       input: [
         {
