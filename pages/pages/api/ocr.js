@@ -4,19 +4,21 @@ const PROMPT_ID = "pmpt_698bced063648190962730f698052da4037477181c4ba725";
 const PROMPT_VERSION = "20";
 
 export default async function handler(req, res) {
-  try {
-    if (req.method !== "POST") {
-      return res.status(405).json({ error: "Method not allowed" });
-    }
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
+  try {
     const { images } = req.body || {};
+
     if (!Array.isArray(images) || images.length === 0) {
       return res.status(400).json({ error: "No images provided" });
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY
+    });
 
-    // 사진 순서 유지
     const content = images.map((img) => ({
       type: "input_image",
       image_url: img
@@ -25,8 +27,10 @@ export default async function handler(req, res) {
     const response = await client.responses.create({
       model: "gpt-5-mini",
       reasoning: { effort: "high" },
-      // ✅ 여기 때문에 "당신의 커스텀 프롬프트"가 적용됩니다
-      prompt: { id: PROMPT_ID, version: PROMPT_VERSION },
+      prompt: {
+        id: PROMPT_ID,
+        version: PROMPT_VERSION
+      },
       input: [
         {
           role: "user",
@@ -35,8 +39,12 @@ export default async function handler(req, res) {
       ]
     });
 
-    return res.status(200).json({ result: response.output_text });
-  } catch (e) {
-    return res.status(500).json({ error: e?.message || "Server error" });
+    return res.status(200).json({
+      result: response.output_text || ""
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: err?.message || "Server error"
+    });
   }
 }
