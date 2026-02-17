@@ -19,12 +19,20 @@ export default function Home() {
       return;
     }
 
+    // 안내 문구대로 1장만 처리
+    if (files.length > 1) {
+      alert("현재는 한 번에 이미지 1장만 업로드 가능합니다.");
+      return;
+    }
+
     setLoading(true);
     setResult("");
 
     try {
       const images = [];
-      for (const f of files) images.push(await toDataUrl(f));
+      for (const f of files) {
+        images.push(await toDataUrl(f));
+      }
 
       const resp = await fetch("/api/ocr", {
         method: "POST",
@@ -32,12 +40,16 @@ export default function Home() {
         body: JSON.stringify({ images }),
       });
 
-      const data = await resp.json();
+      // 서버가 JSON이 아닐 때도 안전하게 처리
+      const data = await resp.json().catch(() => ({}));
+
       if (!resp.ok) {
-        setResult(`ERROR: ${data?.error || "Unknown error"}`);
-      } else {
-        setResult(data.result || "");
+        throw new Error(data?.detail || data?.error || `HTTP ${resp.status}`);
       }
+
+      // Gemini/OpenAI 응답 키 모두 호환
+      const output = data?.result ?? data?.text ?? "";
+      setResult(output || "ERROR: 모델 응답이 비어 있습니다.");
     } catch (e) {
       setResult(`ERROR: ${e?.message || "요청 중 오류가 발생했습니다."}`);
     } finally {
@@ -101,7 +113,7 @@ export default function Home() {
             minHeight: 220,
           }}
         >
-{result ? `\`\`\`\n${result}\n\`\`\`` : "여기에 결과가 표시됩니다."}
+          {result ? `\`\`\`\n${result}\n\`\`\`` : "여기에 결과가 표시됩니다."}
         </pre>
       </div>
 
