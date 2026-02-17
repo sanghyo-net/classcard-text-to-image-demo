@@ -68,7 +68,7 @@ export default function Home() {
       <h2>클래스카드용 Image-to-Text 단어장 생성 AI</h2>
 
       <p style={{ lineHeight: 1.7, marginBottom: 8 }}>
-        스캔 처리된 단어장 사진을 촬영해 첨부해주세요. 한 번의 처리에 하나의 이미지만 업로드해 주세요. VFlat Scan 같은 앱을 통해 반드시 스캔 처리되어있어야 합니다.{" "}
+        스캔 처리된 단어장 사진을 촬영해 첨부해주세요. 한 번의 처리에 하나의 이미지만 업로드해 주세요. JPG 이미지를 사용해주세요. VFlat Scan 같은 앱을 통해 반드시 스캔 처리되어있어야 합니다.{" "}
         <a
           href="https://drive.google.com/drive/folders/1VfdPG5qvjOapJ5BrwhnvVEdXjZxg113h?usp=sharing"
           target="_blank"
