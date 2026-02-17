@@ -1,11 +1,22 @@
 import OpenAI from "openai";
 
-const PROMPT_ID = "pmpt_698bced063648190962730f698052da4037477181c4ba725";
-const PROMPT_VERSION = "20";
+const client = new OpenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+  baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: "Missing GEMINI_API_KEY" });
+  }
+
+  const SYSTEM_PROMPT = process.env.OCR_SYSTEM_PROMPT;
+  if (!SYSTEM_PROMPT) {
+    return res.status(500).json({ error: "Missing OCR_SYSTEM_PROMPT" });
   }
 
   try {
@@ -15,37 +26,38 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No images provided" });
     }
 
-    const client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // 프론트에서 넘어온 data URL(base64)들을 그대로 이미지 입력으로 전달
+    const userContent = [
+      { type: "text", text: "첨부한 이미지들을 순서대로 처리해 주세요." },
+      ...images.map((img) => ({
+        type: "image_url",
+        image_url: { url: img },
+      })),
+    ];
 
-    // 업로드된 이미지 순서 그대로 전달
-    const content = images.map((img) => ({
-      type: "input_image",
-      image_url: img, // data URL(base64) 또는 URL 문자열
-    }));
-
-    const response = await client.responses.create({
-      model: "gpt-5-mini",
-      reasoning: { effort: "high" },
-      prompt: {
-        id: PROMPT_ID,
-        version: PROMPT_VERSION,
-      },
-      input: [
-        {
-          role: "user",
-          content,
-        },
+    const response = await client.chat.completions.create({
+      model: "gemini-3-flash-preview",
+      reasoning_effort: "high",
+      temperature: 0,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: userContent },
       ],
     });
 
-    return res.status(200).json({
-      result: response.output_text || "",
-    });
+    let output = response?.choices?.[0]?.message?.content ?? "";
+    if (Array.isArray(output)) {
+      output = output
+        .map((part) => (typeof part === "string" ? part : part?.text || ""))
+        .join("\n");
+    }
+
+    return res.status(200).json({ text: output });
   } catch (err) {
+    console.error("Gemini OCR error:", err);
     return res.status(500).json({
-      error: err?.message || "Server error",
+      error: "Gemini OCR failed",
+      detail: err?.message || "Unknown error",
     });
   }
 }
