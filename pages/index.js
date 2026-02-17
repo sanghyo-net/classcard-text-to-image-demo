@@ -19,40 +19,57 @@ export default function Home() {
       return;
     }
 
-    // 안내 문구대로 1장만 처리
     if (files.length > 1) {
       alert("현재는 한 번에 이미지 1장만 업로드 가능합니다. 물론 실제 사용환경에서는 많은 이미지 동시 입력을 지원합니다.");
+      return;
+    }
+
+    const file = files[0];
+
+    // 안내문 일치: JPG 권장
+    if (!["image/jpeg", "image/jpg", "image/png", "image/webp"].includes(file.type)) {
+      alert("JPG/PNG/WEBP 파일을 사용해주세요.");
+      return;
+    }
+
+    // 너무 큰 파일 방지 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("이미지 용량이 큽니다. 5MB 이하로 줄여서 업로드해주세요.");
       return;
     }
 
     setLoading(true);
     setResult("");
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 75000);
+
     try {
-      const images = [];
-      for (const f of files) {
-        images.push(await toDataUrl(f));
-      }
+      const images = [await toDataUrl(file)];
 
       const resp = await fetch("/api/ocr", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ images }),
+        signal: controller.signal,
       });
 
-      // 서버가 JSON이 아닐 때도 안전하게 처리
       const data = await resp.json().catch(() => ({}));
 
       if (!resp.ok) {
         throw new Error(data?.detail || data?.error || `HTTP ${resp.status}`);
       }
 
-      // Gemini/OpenAI 응답 키 모두 호환
       const output = data?.result ?? data?.text ?? "";
       setResult(output || "ERROR: 모델 응답이 비어 있습니다.");
     } catch (e) {
-      setResult(`ERROR: ${e?.message || "요청 중 오류가 발생했습니다."}`);
+      if (e?.name === "AbortError") {
+        setResult("ERROR: 처리 시간이 초과되었습니다. 이미지 해상도/용량을 낮춰 다시 시도해주세요.");
+      } else {
+        setResult(`ERROR: ${e?.message || "요청 중 오류가 발생했습니다."}`);
+      }
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }
@@ -68,7 +85,7 @@ export default function Home() {
       <h2>클래스카드용 Image-to-Text 단어장 생성 AI</h2>
 
       <p style={{ lineHeight: 1.7, marginBottom: 8 }}>
-        한 번의 처리에 하나의 이미지만 업로드해 주세요. JPG 이미지를 사용해주세요. VFlat Scan 같은 앱을 통해 스캔 처리된 이미지를 입력하시면 더욱 좋은 결과를 보장합니다. {" "}
+        한 번의 처리에 하나의 이미지만 업로드해 주세요. JPG 이미지를 사용해주세요. VFlat Scan 같은 앱을 통해 스캔 처리된 이미지를 입력하시면 더욱 좋은 결과를 보장합니다.{" "}
         <a
           href="https://drive.google.com/drive/folders/1VfdPG5qvjOapJ5BrwhnvVEdXjZxg113h?usp=sharing"
           target="_blank"
@@ -84,8 +101,7 @@ export default function Home() {
 
       <input
         type="file"
-        accept="image/*"
-        multiple
+        accept="image/jpeg,image/jpg,image/png,image/webp"
         onChange={(e) => setFiles(Array.from(e.target.files || []))}
       />
 
