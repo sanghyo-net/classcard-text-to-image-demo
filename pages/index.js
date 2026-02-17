@@ -21,7 +21,7 @@ export default function Home() {
 
     // 안내 문구대로 1장만 처리
     if (files.length > 1) {
-      alert("현재는 한 번에 이미지 1장만 업로드 가능합니다.");
+      alert("현재는 한 번에 이미지 1장만 업로드 가능합니다. 물론 실제 사용환경에서는 많은 이미지 동시 입력을 지원합니다.");
       return;
     }
 
@@ -68,13 +68,13 @@ export default function Home() {
       <h2>클래스카드용 Image-to-Text 단어장 생성 AI</h2>
 
       <p style={{ lineHeight: 1.7, marginBottom: 8 }}>
-        스캔 처리된 단어장 사진을 촬영해 첨부해주세요. 한 번의 처리에 하나의 이미지만 업로드해 주세요. JPG 이미지를 사용해주세요. VFlat Scan 같은 앱을 통해 반드시 스캔 처리되어있어야 합니다.{" "}
+        한 번의 처리에 하나의 이미지만 업로드해 주세요. JPG 이미지를 사용해주세요. VFlat Scan 같은 앱을 통해 스캔 처리된 이미지를 입력하시면 더욱 좋은 결과를 보장합니다. {" "}
         <a
           href="https://drive.google.com/drive/folders/1VfdPG5qvjOapJ5BrwhnvVEdXjZxg113h?usp=sharing"
           target="_blank"
           rel="noopener noreferrer"
         >
-          촬영 예시 보기
+          스캔 촬영예시
         </a>
       </p>
 
