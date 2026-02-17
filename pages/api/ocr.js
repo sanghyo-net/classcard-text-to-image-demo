@@ -1,5 +1,13 @@
 import OpenAI from "openai";
 
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "10mb",
+    },
+  },
+};
+
 const client = new OpenAI({
   apiKey: process.env.GEMINI_API_KEY,
   baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
@@ -26,7 +34,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "No images provided" });
     }
 
-    // 프론트에서 넘어온 data URL(base64)들을 그대로 이미지 입력으로 전달
     const userContent = [
       { type: "text", text: "첨부한 이미지들을 순서대로 처리해 주세요." },
       ...images.map((img) => ({
@@ -37,7 +44,6 @@ export default async function handler(req, res) {
 
     const response = await client.chat.completions.create({
       model: "gemini-3-flash-preview",
-      reasoning_effort: "high",
       temperature: 0,
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
@@ -52,7 +58,18 @@ export default async function handler(req, res) {
         .join("\n");
     }
 
-    return res.status(200).json({ text: output });
+    if (!output || !output.trim()) {
+      return res.status(502).json({
+        error: "Empty model output",
+        detail: "Model returned empty content",
+      });
+    }
+
+    // 프론트 호환 위해 둘 다 반환
+    return res.status(200).json({
+      result: output,
+      text: output,
+    });
   } catch (err) {
     console.error("Gemini OCR error:", err);
     return res.status(500).json({
